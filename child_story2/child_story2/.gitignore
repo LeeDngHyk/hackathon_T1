@@ -1,0 +1,17 @@
+﻿# venv & 캐시
+venv/
+__pycache__/
+*.pyc
+.env
+
+# 파이프라인 산출물 (커밋하지 않음)
+output/
+enriched_story.json
+output_story.json
+
+# 업로드 이미지 (필요시 커밋)
+# uploads/
+
+# 임시
+*.log
+.DS_Store

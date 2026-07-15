@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>하루콩</title>
+<style>
+@font-face{
+  font-family:'Pretendard Variable';
+  font-weight:45 920;
+  font-style:normal;
+  font-display:swap;
+  src:url('assets/fonts/PretendardVariable.woff2') format('woff2-variations');
+}
+:root{
+  --green:#9DC15C; --green-d:#86A948; --green-deep:#3F6B2E;
+  --cream:#F2F4EA; --bg:#FFFFFF; --ink:#2B2B2B; --sub:#9BA1A7;
+  --border:#ECECEC; --card:#F7F8F3; --danger:#E4572E;
+  --safe-top:env(safe-area-inset-top,0px); --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Pretendard Variable',-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  background:var(--bg); color:var(--ink); overflow:hidden;
+  -webkit-user-select:none; user-select:none;
+}
+#app{position:relative;height:100vh;width:100%;overflow:hidden}
+.screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  background:var(--bg);opacity:0;visibility:hidden;transform:translateX(30px);
+  transition:opacity .28s ease,transform .28s ease;
+}
+.screen.active{opacity:1;visibility:visible;transform:none;z-index:2}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:24px}
+.pad{padding:0 20px}
+
+/* header */
+.appbar{
+  display:flex;align-items:center;gap:8px;padding:calc(var(--safe-top) + 10px) 16px 12px;
+  border-bottom:1px solid var(--border);position:relative;flex:none;background:#fff;
+}
+.appbar .title{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-size:17px;pointer-events:none}
+.iconbtn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:none;border:none;font-size:22px;color:var(--ink);cursor:pointer}
+.iconbtn:active{background:#f1f1f1}
+
+/* buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;border:none;border-radius:14px;background:var(--green);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .05s,background .15s}
+.btn:active{transform:scale(.985);background:var(--green-d)}
+.btn[disabled]{background:#D9DCD2;color:#fff}
+.btn.ghost{background:var(--cream);color:var(--green-deep)}
+.btn.line{background:#fff;border:1.5px solid var(--green);color:var(--green-deep)}
+.textlink{display:block;text-align:center;color:var(--sub);font-size:14px;padding:14px;background:none;border:none;width:100%;cursor:pointer}
+
+h1.big{font-size:23px;line-height:1.35;font-weight:800;letter-spacing:-.3px}
+.muted{color:var(--sub)}
+.date{color:var(--green-d);font-weight:700;font-size:13px}
+
+/* info chip */
+.info{display:flex;gap:8px;align-items:center;background:var(--cream);border-radius:12px;padding:12px 14px;font-size:13px;color:#7c8a5f}
+.info .dot{width:18px;height:18px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none}
+
+/* form */
+.label{font-weight:700;font-size:14px;margin:22px 0 8px}
+.label .req{color:var(--danger)}
+.field{width:100%;padding:15px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:#fff;color:var(--ink);font-family:inherit}
+.field::placeholder{color:#C4C8CC}
+textarea.field{min-height:200px;resize:none;line-height:1.6}
+.seg{display:flex;gap:12px}
+.seg button{flex:1;padding:16px;border:1.5px solid var(--border);border-radius:12px;background:#fff;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer}
+.seg button.on{border-color:var(--green);background:#F3F8EA;color:var(--green-deep)}
+
+/* cards / list */
+.section-title{font-weight:800;font-size:16px;margin:22px 0 12px;display:flex;align-items:center;justify-content:space-between}
+.hcards{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.hcards::-webkit-scrollbar{display:none}
+.storycard{flex:none;width:150px;scroll-snap-align:start;cursor:pointer}
+.thumb{width:100%;border-radius:14px;overflow:hidden;position:relative;aspect-ratio:16/11;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.thumb .dur{position:absolute;right:7px;bottom:7px;background:rgba(0,0,0,.62);color:#fff;font-size:11px;font-weight:600;padding:2px 6px;border-radius:6px}
+.storycard .t{font-weight:700;font-size:13.5px;margin-top:8px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.storycard .d{color:var(--sub);font-size:11.5px;margin-top:3px}
+
+.tip{background:var(--cream);border-radius:12px;padding:12px 14px;font-size:12.5px;color:#8a936f;line-height:1.5;margin-top:14px}
+
+/* diary CTA on home */
+.diarycta{margin-top:22px;background:linear-gradient(180deg,#F7F9F0,#EEF3E1);border-radius:18px;padding:18px;position:relative;overflow:hidden}
+.diarycta h3{font-size:15px;margin-bottom:4px}
+.diarycta p{font-size:13px;color:#7c8a5f;line-height:1.5;max-width:80%}
+.diarycta .go{margin-top:14px;background:#fff;color:var(--green-deep);border:none;padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px}
+.diarycta .m{position:absolute;right:10px;bottom:6px;width:70px}
+
+/* bottom tabs */
+.tabbar{flex:none;display:flex;border-top:1px solid var(--border);background:#fff;padding-bottom:var(--safe-bot)}
+.tabbar button{flex:1;background:none;border:none;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#B7BCC2;font-size:11px;font-weight:600;cursor:pointer}
+.tabbar button.on{color:var(--green-d)}
+.tabbar svg{width:23px;height:23px}
+
+/* segmented tabs (list top) */
+.segtab{display:flex;gap:26px;padding:14px 20px 0;border-bottom:1px solid var(--border)}
+.segtab button{background:none;border:none;padding:6px 0 12px;font-size:14.5px;font-weight:700;color:#BFC4C9;position:relative;cursor:pointer}
+.segtab button.on{color:var(--green-deep)}
+.segtab button.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2.5px;border-radius:3px;background:var(--green)}
+
+/* list rows */
+.listcard{cursor:pointer;margin-bottom:20px}
+.listcard .thumb{aspect-ratio:16/9}
+.listcard .t{font-weight:700;font-size:15px;margin-top:10px}
+.listcard .d{color:var(--sub);font-size:12.5px;margin-top:3px}
+
+/* player */
+.player{width:100%;aspect-ratio:16/10;position:relative;background:#111;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.player .pbar{position:absolute;left:0;right:0;bottom:0;padding:10px 12px;display:flex;align-items:center;gap:10px;color:#fff;font-size:12px;background:linear-gradient(0deg,rgba(0,0,0,.5),transparent)}
+.player .track{flex:1;height:3px;background:rgba(255,255,255,.35);border-radius:3px;position:relative}
+.player .track i{position:absolute;left:0;top:0;bottom:0;width:22%;background:var(--green);border-radius:3px}
+.play-c{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;color:var(--green-deep);font-size:24px}
+
+.answerlink{display:flex;align-items:center;gap:12px;padding:16px 18px;border:1px solid var(--border);border-radius:14px;margin:16px 20px;cursor:pointer}
+.answerlink .av{width:30px;height:30px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center}
+.answerlink .g{flex:1;font-weight:700;font-size:14.5px}
+.answerlink .c{color:var(--sub)}
+
+.script{background:var(--card);border-radius:14px;padding:16px;font-size:13.5px;line-height:1.75;color:#3a3a3a;white-space:pre-wrap}
+.script b{color:var(--green-deep)}
+
+/* report */
+.repcard{border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px;cursor:pointer;display:flex;gap:12px;align-items:center}
+.repcard .badge{width:44px;height:44px;border-radius:12px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.repcard .rt{font-weight:700;font-size:14.5px}
+.repcard .rd{color:var(--sub);font-size:12.5px;margin-top:2px}
+.repsec{margin-top:18px}
+.repsec .h{display:flex;align-items:center;gap:8px;font-weight:800;font-size:15px;margin-bottom:8px}
+.repsec .h .n{width:22px;height:22px;border-radius:7px;background:var(--green);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center}
+.repsec .body{background:var(--card);border-radius:14px;padding:14px 16px;font-size:13.5px;line-height:1.7;color:#3d3d3d}
+.quote{background:#F3F8EA;border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:10px 14px;font-size:13.5px;color:#4a5a2e;margin:8px 0;line-height:1.6}
+.growbtn{margin:8px 0 4px}
+.repsec .h.plain{font-size:16px;margin-bottom:10px}
+.hexwrap{display:flex;justify-content:center;margin:4px 0 10px}
+
+/* generating */
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 30px;gap:14px}
+.progress{width:200px;height:8px;background:#EDEFE6;border-radius:8px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--green);border-radius:8px;transition:width .3s}
+
+/* splash */
+.splash{background:#fff;align-items:center;justify-content:center;text-align:center;gap:0}
+.splash .logo{width:210px;margin-bottom:auto;margin-top:34vh}
+.splash .cta-wrap{width:100%;padding:0 24px calc(var(--safe-bot) + 30px)}
+.floatbean{position:absolute;opacity:.9}
+
+.emptybox{background:var(--card);border-radius:14px;min-height:190px;display:flex;align-items:center;justify-content:center;color:#B7BCC2;font-size:14px;text-align:center;padding:20px;cursor:text}
+.chararea{width:120px;margin:6px auto 2px;display:block}
+.tag{display:inline-block;background:#F3F8EA;color:var(--green-deep);font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px}
+.answer-bubble{background:#F3F8EA;border-radius:14px;padding:14px 16px;font-size:14px;line-height:1.6;color:#3d4a2a;margin:14px 20px}
+.answer-bubble .who{font-weight:800;color:var(--green-deep);font-size:12px;margin-bottom:5px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ---------- shared SVG helpers ---------- */
+const bean = (s=90)=>`<svg width="${s}" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M60 26C40 26 30 42 30 66c0 30 14 52 30 52s30-22 30-52C90 42 80 26 60 26z" fill="#A7CC63"/>
+<path d="M60 26C48 26 40 40 40 66c0 28 10 50 20 50V26z" fill="#B7D775"/>
+<path d="M60 30c-2-10 2-20 12-24 2 8-2 18-12 24z" fill="#7BAe3f"/>
+<ellipse cx="60" cy="70" rx="26" ry="30" fill="#F4F6E9"/>
+<circle cx="50" cy="66" r="3.4" fill="#43502c"/><circle cx="70" cy="66" r="3.4" fill="#43502c"/>
+<circle cx="45" cy="76" r="4.5" fill="#F3B7A9" opacity=".7"/><circle cx="75" cy="76" r="4.5" fill="#F3B7A9" opacity=".7"/>
+<path d="M53 76c3 4 11 4 14 0" stroke="#43502c" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+</svg>`;
+const beanBook = (s=140)=>`<svg width="${s}" viewBox="0 0 160 150" xmlns="http://www.w3.org/2000/svg">
+<path d="M80 18C56 18 44 36 44 66c0 26 12 44 26 50h20c14-6 26-24 26-50C116 36 104 18 80 18z" fill="#A7CC63"/>
+<path d="M80 22c-2-10 3-20 13-23 2 8-3 18-13 23z" fill="#7BAe3f"/>
+<ellipse cx="80" cy="60" rx="22" ry="24" fill="#F4F6E9"/>
+<circle cx="72" cy="57" r="3" fill="#43502c"/><circle cx="88" cy="57" r="3" fill="#43502c"/>
+<path d="M74 66c3 3 9 3 12 0" stroke="#43502c" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+<circle cx="67" cy="65" r="4" fill="#F3B7A9" opacity=".7"/><circle cx="93" cy="65" r="4" fill="#F3B7A9" opacity=".7"/>
+<path d="M40 96l40-10 40 10v34l-40-8-40 8z" fill="#6FA23C"/>
+<path d="M80 86v44M40 96v34M120 96v34" stroke="#5A8730" stroke-width="2" fill="none"/>
+</svg>`;
+const beanPlane = (s=150)=>`<svg width="${s}" viewBox="0 0 170 130" xmlns="http://www.w3.org/2000/svg">
+<path d="M30 78L150 40 70 96z" fill="#F1E9D0"/><path d="M70 96l80-56-46 66z" fill="#E4D9B6"/>
+<path d="M30 78l40 18-4-24z" fill="#EFE6C8"/>
+<path d="M92 30c-18 0-28 14-28 34 0 12 6 22 16 27 8-2 24-8 32-20 4-14 2-30-4-38-4-2-9-3-16-3z" fill="#A7CC63"/>
+<ellipse cx="92" cy="52" rx="17" ry="18" fill="#F4F6E9"/>
+<circle cx="85" cy="50" r="2.6" fill="#43502c"/><circle cx="99" cy="50" r="2.6" fill="#43502c"/>
+<path d="M86 57c3 3 8 3 11 0" stroke="#43502c" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+<path d="M20 84l14-3M24 96l13-4" stroke="#B7D775" stroke-width="4" stroke-linecap="round"/>
+</svg>`;
+const mascotFace = bean;
+const sparkle = (s=24,c='#FBD34A')=>`<svg width="${s}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0c1 6 2 8 8 8-6 1-7 3-8 8-1-6-2-8-8-8 6-1 7-3 8-8z" fill="${c}"/></svg>`;
+const heartDeco = (s=20,c='#F3B7A9')=>`<svg width="${s}" viewBox="0 0 24 22" xmlns="http://www.w3.org/2000/svg"><path d="M12 21S1 13.5 1 6.7C1 3 3.7 1 6.6 1 9 1 11 2.4 12 4.5 13 2.4 15 1 17.4 1 20.3 1 23 3 23 6.7 23 13.5 12 21 12 21z" fill="${c}"/></svg>`;
+const beanPod = (s=60)=>`<svg width="${s}" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M60 26C40 26 30 42 30 66c0 30 14 52 30 52s30-22 30-52C90 42 80 26 60 26z" fill="#A7CC63"/>
+<path d="M60 26C48 26 40 40 40 66c0 28 10 50 20 50V26z" fill="#B7D775"/>
+<path d="M60 30c-2-10 2-20 12-24 2 8-2 18-12 24z" fill="#7BAe3f"/>
+</svg>`;
+const leafDeco = (s=18,c='#B7D775')=>`<svg width="${s}" viewBox="0 0 28 18" xmlns="http://www.w3.org/2000/svg"><path d="M2 16C2 6 12 2 26 2 24 12 14 16 2 16z" fill="${c}"/></svg>`;
+
+/* 6각형 성장 지표 레이더 차트 */
+function hexChart(vals, size){
+  size=size||260;
+  const labels=['인내심','배려심','협동심','공감능력','자기조절력','표현력'];
+  const cx=size/2, cy=size/2, R=size*0.30;
+  const angle=i=>-90+i*60;
+  const pt=(i,r)=>{const a=angle(i)*Math.PI/180;return [cx+r*Math.cos(a), cy+r*Math.sin(a)];};
+  const rings=[0.25,0.5,0.75,1].map(f=>`<polygon points="${labels.map((_,i)=>pt(i,R*f).join(',')).join(' ')}" fill="none" stroke="#E4E8DA" stroke-width="1"/>`).join('');
+  const axes=labels.map((_,i)=>{const [x,y]=pt(i,R);return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#E4E8DA" stroke-width="1"/>`;}).join('');
+  const dataPts=labels.map((l,i)=>pt(i,R*vals[l]).join(',')).join(' ');
+  const labelEls=labels.map((l,i)=>{const [x,y]=pt(i,R+26);return `<text x="${x}" y="${y}" font-size="12" font-weight="700" fill="#5c6650" text-anchor="middle" dominant-baseline="middle">${l}</text>`;}).join('');
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${rings}${axes}<polygon points="${dataPts}" fill="var(--green)" fill-opacity="0.55" stroke="var(--green-d)" stroke-width="2"/>${labelEls}</svg>`;
+}
+
+/* scene illustration generator (storybook look) */
+function scene(seed){
+  const sets=[
+    ['#BFE3F5','#D9F0C9','#F7E9A8'],['#F9DCC4','#FBEFC8','#CDE9C0'],
+    ['#DCD6F7','#EAD9F2','#F7D9E3'],['#CDEFE6','#DBF2C9','#F6E7B8']
+  ];
+  const c=sets[seed%sets.length];
+  return `<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+  <rect width="160" height="100" fill="${c[0]}"/>
+  <circle cx="128" cy="24" r="13" fill="${c[2]}"/>
+  <path d="M0 74c22-14 40-14 60 0 20-14 40-14 62 0 14-8 26-8 38-2V100H0z" fill="${c[1]}"/>
+  <path d="M0 88c30-12 52-12 82 0 26-10 50-10 78 0V100H0z" fill="#B7D775" opacity=".9"/>
+  <g transform="translate(58 40) scale(.9)">${bean(46)}</g>
+  <ellipse cx="70" cy="92" rx="26" ry="5" fill="#000" opacity=".05"/>
+  </svg>`;
+}
+
+/* tab icons */
+const ic = {
+  home:`<svg viewBox="0 0 24 24" fill="none"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
+  diary:`<svg viewBox="0 0 24 24" fill="none"><path d="M5 4h11l3 3v13H5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  book:`<svg viewBox="0 0 24 24" fill="none"><path d="M12 6C10 4.5 7 4 4 5v13c3-1 6-.5 8 1 2-1.5 5-2 8-1V5c-3-1-6-.5-8 1z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 7v11" stroke="currentColor" stroke-width="1.8"/></svg>`,
+  report:`<svg viewBox="0 0 24 24" fill="none"><path d="M6 3h9l4 4v14H6z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12v5M12 9v8M15 14v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`
+};
+
+/* ---------- demo data ---------- */
+const CHILD = {name:'이준', short:'이준이'};
+const STORIES = [
+  {id:1, t:'장난감은 나만 갖고 싶어요', d:'2026.07.16 (수)', dur:'10:14', seed:1, seen:true,
+    theme:'소유욕 · 나눔', answered:true},
+  {id:2, t:'친구와 싸웠어요', d:'2026.07.15 (화)', dur:'08:51', seed:2, seen:true, theme:'갈등 · 화해', answered:true},
+  {id:3, t:'엄마는 나만 혼내요', d:'2026.07.14 (월)', dur:'07:41', seed:0, seen:false, theme:'공정함 · 감정', answered:false},
+  {id:4, t:'혼자서도 잘 자요', d:'2026.07.12 (토)', dur:'06:20', seed:3, seen:true, theme:'독립 · 용기', answered:true},
+];
+const REPORTS = [
+  {id:1, t:'장난감은 나만 갖고 싶어요', d:'2026.07.16 (수)', kind:'동화 리포트'},
+  {id:2, t:'친구와 싸웠어요', d:'2026.07.15 (화)', kind:'동화 리포트'},
+  {id:3, t:'내면 자아 성장 기록 · 7월', d:'2026.07.16 (수)', kind:'누적 리포트', cum:true},
+];
+
+/* ---------- router ---------- */
+const app = document.getElementById('app');
+let stack=[];
+const screens={};
+function reg(id,html){screens[id]=html;}
+function go(id,opts={}){
+  const prev=document.querySelector('.screen.active');
+  if(opts.replace && stack.length) stack.pop();
+  if(!opts.noPush && (!stack.length || stack[stack.length-1]!==id)) stack.push(id);
+  render(id);
+}
+function back(){
+  if(stack.length>1){stack.pop();render(stack[stack.length-1]);}
+}
+function render(id){
+  app.innerHTML='';
+  const el=document.createElement('div');
+  el.className='screen active';
+  el.innerHTML=typeof screens[id]==='function'?screens[id]():screens[id];
+  app.appendChild(el);
+  requestAnimationFrame(()=>el.classList.add('active'));
+  if(binds[id]) binds[id](el);
+  const sc=el.querySelector('.scroll'); if(sc) sc.scrollTop=0;
+}
+const binds={};
+
+/* ---------- app state ---------- */
+const state={name:'',birth:'',gender:'',diary:'',intent:'',tab:'home'};
+
+/* ===== SPLASH ===== */
+reg('splash',()=>`
+<div class="screen splash active" style="position:absolute;inset:0">
+  <div class="floatbean" style="top:9%;left:9%">${bean(34)}</div>
+  <div class="floatbean" style="top:6%;right:10%">${sparkle(20)}</div>
+  <div class="floatbean" style="top:50%;right:7%;transform:rotate(14deg)">${beanPod(52)}</div>
+  <div class="floatbean" style="bottom:22%;left:9%">${bean(38)}</div>
+  <div class="floatbean" style="bottom:20%;right:9%">${heartDeco(20)}</div>
+  <div class="floatbean" style="bottom:13%;right:8%">${leafDeco(20)}</div>
+  <img class="logo" src="assets/logo.png" alt="하루콩">
+  <div class="cta-wrap"><button class="btn" onclick="go('info')">시작하기</button></div>
+</div>`);
+binds['splash']=()=>{};
+
+/* ===== INFO INPUT ===== */
+reg('info',()=>`
+<div class="appbar"><button class="iconbtn" onclick="back()">‹</button><div class="title">아이 정보 입력</div></div>
+<div class="scroll pad">
+  <h1 class="big" style="margin:22px 0 14px">서비스 이용을 위해<br>정보를 입력해 주세요.</h1>
+  <div class="info"><span class="dot">i</span>아이의 정보로 동화가 생성됩니다.</div>
+  <div class="label">이름 <span class="req">*</span></div>
+  <input id="f-name" class="field" placeholder="이름 입력">
+  <div class="label">생년월일 <span class="req">*</span></div>
+  <input id="f-birth" class="field" placeholder="2016 / 12 / 08">
+  <div class="label">성별 <span class="req">*</span></div>
+  <div class="seg">
+    <button data-g="여자아이" onclick="pickG(this)">여자아이</button>
+    <button data-g="남자아이" onclick="pickG(this)">남자아이</button>
+  </div>
+  <div style="height:24px"></div>
+  <button id="f-submit" class="btn" disabled onclick="submitInfo()">등록하기</button>
+  <button class="textlink" onclick="submitInfo(true)">저장하고 아이 등록하기</button>
+</div>`);
+function pickG(b){document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');state.gender=b.dataset.g;checkInfo();}
+function checkInfo(){
+  const n=document.getElementById('f-name').value.trim();
+  state.name=n||'';
+  const ok=n && state.gender;
+  document.getElementById('f-submit').disabled=!ok;
+}
+function submitInfo(){ if(!state.name) state.name='이준'; CHILD.name=state.name; CHILD.short=state.name+'이'; go('home',{replace:true}); }
+binds['info']=(el)=>{ el.querySelector('#f-name').addEventListener('input',checkInfo); };
+
+/* ===== HOME ===== */
+function homeShell(inner,tab){
+  return `<div class="appbar" style="justify-content:flex-start;border:none">
+      <img src="assets/logo.png" style="height:26px" alt="하루콩">
+    </div>
+    <div class="scroll">${inner}</div>
+    ${tabbar(tab)}`;
+}
+function tabbar(cur){
+  const t=(id,label,icon)=>`<button class="${cur===id?'on':''}" onclick="switchTab('${id}')">${icon}<span>${label}</span></button>`;
+  return `<div class="tabbar">
+    ${t('home','홈',ic.home)}${t('diary','육아일기',ic.diary)}${t('book','동화보기',ic.book)}${t('report','리포트 확인',ic.report)}
+  </div>`;
+}
+function switchTab(id){state.tab=id;go('tab-'+id,{replace:true,noPush:true});stack=[ 'tab-'+id ];}
+
+reg('home',()=>{
+  const cards=STORIES.slice(0,3).map(s=>storyCard(s)).join('');
+  return homeShell(`
+    <div class="pad" style="padding-top:6px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="date">2026년 7월 16일</div>
+          <h1 class="big" style="margin-top:6px">${CHILD.short}의 답변을<br>확인해 볼까요? →</h1>
+        </div>
+        <div style="margin-top:-4px">${bean(64)}</div>
+      </div>
+      <div class="section-title">최근 생성된 동화</div>
+      <div class="hcards">${cards}</div>
+      <div class="tip">💡 Tip! 아이의 답변에 따라 비슷한 동화를 새로 만들 수 있어요.</div>
+      <div class="diarycta">
+        <h3>육아일기 작성하기</h3>
+        <p>오늘 ${CHILD.short}에게는 무슨 일이 있었나요?</p>
+        <button class="go" onclick="startDiary()">바로 작성하기</button>
+        <div class="m">${bean(58)}</div>
+      </div>
+    </div>`,'home');
+});
+binds['tab-home']=binds['home'];
+reg('tab-home',screens['home']);
+
+function storyCard(s){
+  return `<div class="storycard" onclick="openStory(${s.id})">
+    <div class="thumb">${scene(s.seed)}<span class="dur">${s.dur}</span></div>
+    <div class="t">${s.t}</div><div class="d">${s.d.split(' ')[0]}</div>
+  </div>`;
+}
+
+/* ===== DIARY 1/2 & 2/2 ===== */
+function startDiary(){ state.diary='';state.intent='';go('diary1'); }
+function diaryScreen(step,q){
+  return `<div class="appbar"><button class="iconbtn" onclick="back()">‹</button><div class="title">육아일기 작성</div></div>
+  <div class="scroll pad">
+    <div style="text-align:center;margin-top:14px">${beanBook(120)}</div>
+    <h1 class="big" style="text-align:center;margin-top:4px">${q}</h1>
+    <div class="date" style="text-align:center;color:var(--sub);font-weight:600;margin-top:8px">2026.07.16 (수)</div>
+    <textarea id="d-input" class="field" style="margin-top:18px" placeholder="이곳을 눌러서 답변해 주세요!">${step===1?state.diary:state.intent}</textarea>
+    <div style="height:14px"></div>
+    <button class="btn" onclick="${step===1?'diaryNext()':'genStory()'}">작성 완료 (${step}/2)</button>
+    <div style="height:20px"></div>
+  </div>`;
+}
+reg('diary1',()=>diaryScreen(1,`${CHILD.short}의 오늘 하루는 어땠나요?<br>자세하게 알려주세요!`));
+reg('diary2',()=>diaryScreen(2,`아이에게 어떤 식으로<br>가르침을 주고 싶나요?`));
+function diaryNext(){ state.diary=document.getElementById('d-input').value||'유치원에서 친구 하루와 장난감 소방차를 두고 다투었어요. 이준이가 먼저 갖고 놀고 있었는데 하루가 빌려달라고 하니 "내가 먼저 놀 거야"라며 소방차를 꽉 안고 놓아주지 않았어요.'; go('diary2'); }
+function genStory(){ state.intent=document.getElementById('d-input').value||'무조건 양보하라고 강요하기보다, 친구의 마음도 헤아리면서 스스로 나눔의 가치를 느끼도록 이끌어 주고 싶어요.'; go('gen',{replace:true}); }
+
+/* ===== GENERATING ===== */
+reg('gen',()=>`
+  <div class="appbar"><button class="iconbtn" onclick="back()">‹</button><div class="title">육아일기 작성</div></div>
+  <div class="center">
+    <h1 class="big">동화 대본을 작성 중입니다.<br>잠시만 기다려주세요!</h1>
+    <div class="progress"><i id="pg"></i></div>
+    <div class="muted" style="font-size:13px;line-height:1.6">입력해주신 내용을 바탕으로<br>동화 초안을 생성하는 중입니다</div>
+    <div style="margin-top:10px">${beanBook(150)}</div>
+  </div>`);
+binds['gen']=(el)=>{
+  const bar=el.querySelector('#pg');let p=0;
+  const t=setInterval(()=>{p+=Math.random()*22+8;if(p>=100){p=100;bar.style.width='100%';clearInterval(t);setTimeout(()=>go('preview',{replace:true}),450);}bar.style.width=Math.min(p,100)+'%';},420);
+};
+
+/* ===== PREVIEW ===== */
+const SCRIPT_TEXT = `<b>&lt;주인공: 하루, 콩이, 이준&gt;</b>
+
+유치원의 씩씩한 이준이. 어느 날 선생님이 멋진 '소방차'를 꺼내주셨어요. 이준이는 얼른 소방차를 집어 들고 신나게 놀았지요.
+
+그때 친구 하루가 다가와 말했어요.
+"이준아, 나도 소방차 한 번만 갖고 놀아도 돼?"
+
+이준이는 소방차를 꼭 끌어안았어요.
+"안 돼! 내가 먼저 놀 거야. 이건 지금 내 거야!"
+
+하루의 눈에는 눈물이 그렁그렁 맺혔어요…`;
+reg('preview',()=>`
+  <div class="appbar"><button class="iconbtn" onclick="back()">‹</button><div class="title">동화 미리보기</div></div>
+  <div class="scroll">
+    <div class="pad">
+      <div class="thumb" style="aspect-ratio:16/10;margin-top:14px">${scene(1)}<span class="tag" style="position:absolute;left:10px;top:10px;background:rgba(255,255,255,.9)">미리보기</span></div>
+      <h1 class="big" style="margin-top:14px">장난감은 나만 갖고 싶어요</h1>
+      <div class="date" style="margin-top:6px">소유욕 · 나눔 · 배려</div>
+      <div class="script" style="margin-top:14px">${SCRIPT_TEXT}</div>
+      <div class="section-title" style="margin-bottom:8px">퀴즈 설명</div>
+      <div class="script" style="background:var(--cream)">아이는 이야기를 들은 뒤, '요즘 소방차가 망가진 진짜 이유는 무엇일까?'라는 퀴즈를 풀게 됩니다. 소방차가 부러진 원인을 생각하며 친구들과의 갈등 상황을 되돌아보고, 앞으로 어떤 행동이 좋을지 스스로 판단해 볼 수 있습니다.</div>
+    </div>
+    <div class="pad" style="margin-top:18px">
+      <button class="btn" onclick="go('sent',{replace:true})">아이에게 전달할게요</button>
+      <button class="textlink" onclick="go('diary1')">다시 쓸래요</button>
+    </div>
+  </div>`);
+
+/* ===== SENT ===== */
+reg('sent',()=>`
+  <div class="appbar"><button class="iconbtn" onclick="switchTab('home')">‹</button><div class="title">육아일기 작성</div></div>
+  <div class="center">
+    <div>${beanPlane(160)}</div>
+    <h1 class="big">동화 전송이 완료되었습니다!</h1>
+    <div class="muted" style="font-size:13.5px;line-height:1.7">아이에게 오늘의 동화가 무사히 전해졌어요.<br>아이가 동화를 보고 어떤 생각을 했는지<br>곧 확인할 수 있습니다.</div>
+  </div>
+  <div class="pad" style="padding-bottom:calc(var(--safe-bot) + 20px)"><button class="btn" onclick="switchTab('home')">완료하기</button></div>`);
+
+/* ===== DIARY TAB ===== */
+reg('tab-diary',()=>{
+  return `<div class="appbar"><button class="iconbtn" onclick="switchTab('home')">‹</button><div class="title">육아일기 작성</div></div>
+    <div class="scroll pad">
+      <div style="text-align:center;margin-top:14px">${beanBook(120)}</div>
+      <h1 class="big" style="text-align:center;margin-top:4px">${CHILD.short}의 오늘 하루는 어땠나요?<br>자세하게 알려주세요!</h1>
+      <div class="date" style="text-align:center;color:var(--sub);font-weight:600;margin-top:8px">2026.07.16 (수)</div>
+      <textarea id="d-input" class="field" style="margin-top:18px" placeholder="이곳을 눌러서 답변해 주세요!">${state.diary}</textarea>
+      <div style="height:14px"></div>
+      <button class="btn" onclick="tabDiaryNext()">다음 단계로</button>
+      <div style="height:20px"></div>
+    </div>
+    ${tabbar('diary')}`;
+});
+function tabDiaryNext(){
+  state.diary=document.getElementById('d-input').value||'유치원에서 친구 하루와 장난감 소방차를 두고 다투었어요. 이준이가 먼저 갖고 놀고 있었는데 하루가 빌려달라고 하니 "내가 먼저 놀 거야"라며 소방차를 꽉 안고 놓아주지 않았어요.';
+  go('diary2');
+}
+
+/* ===== BOOK TAB (list) ===== */
+let bookFilter='seen';
+reg('tab-book',()=>{
+  const list=STORIES.filter(s=>bookFilter==='seen'?s.seen:!s.seen);
+  const rows=list.map(s=>`<div class="listcard" onclick="openStory(${s.id})">
+      <div class="thumb">${scene(s.seed)}<span class="dur">${s.dur}</span></div>
+      <div class="t">${s.t}</div><div class="d">${s.d}</div>
+    </div>`).join('') || `<div class="emptybox" style="margin-top:20px">아직 여기에 표시할 동화가 없어요.</div>`;
+  return `<div class="appbar"><button class="iconbtn" onclick="switchTab('home')">‹</button><div class="title">동화 다시보기</div></div>
+    <div class="segtab">
+      <button class="${bookFilter==='seen'?'on':''}" onclick="setFilter('seen')">최근에 봤어요</button>
+      <button class="${bookFilter==='unseen'?'on':''}" onclick="setFilter('unseen')">아직 안 봤어요</button>
+    </div>
+    <div class="scroll pad" style="padding-top:16px">${rows}</div>
+    ${tabbar('book')}`;
+});
+function setFilter(f){bookFilter=f;render('tab-book');}
+
+/* ===== STORY DETAIL ===== */
+let curStory=null;
+function openStory(id){curStory=STORIES.find(s=>s.id===id);go('story');}
+reg('story',()=>{
+  const s=curStory;
+  const others=STORIES.filter(x=>x.id!==s.id).slice(0,3).map(x=>`
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;cursor:pointer" onclick="openStory(${x.id})">
+      <div class="thumb" style="width:110px;flex:none;aspect-ratio:16/10">${scene(x.seed)}<span class="dur">${x.dur}</span></div>
+      <div><div style="font-weight:700;font-size:14px;line-height:1.35">${x.t}</div><div class="d" style="color:var(--sub);font-size:12px;margin-top:4px">${x.d}</div></div>
+    </div>`).join('');
+  return `<div class="appbar"><button class="iconbtn" onclick="back()">‹</button><div class="title">동화 다시보기</div></div>
+  <div class="scroll">
+    <div class="player">${scene(s.seed)}<div class="play-c" style="position:absolute">▶</div>
+      <div class="pbar"><span>00:12</span><div class="track"><i></i></div><span>${s.dur}</span></div></div>
+    <div class="pad">
+      <h1 class="big" style="margin-top:16px;font-size:20px">${s.t}</h1>
+      <div class="date" style="margin-top:6px">${s.d}</div>
+    </div>
+    <div class="answerlink" onclick="${s.answered?`openAnswer(${s.id})`:'toast()'}">
+      <div class="av">${bean(22)}</div><div class="g">${CHILD.short}의 답변 보기</div><div class="c">›</div>
+    </div>
+    <div class="pad">
+      <div class="section-title" style="margin-bottom:6px">다른 영상 보기</div>
+      ${others}
+    </div>
+  </div>`;
+});
+function toast(){alert('아직 아이가 이 동화를 보지 않았어요.');}
+
+/* ===== ANSWER DETAIL ===== */
+let curAns=null;
+function openAnswer(id){curAns=STORIES.find(s=>s.id===id);go('answer');}
+reg('answer',()=>{
+  const s=curAns;
+  return `<div class="appbar"><button class="iconbtn" onclick="back()">‹</button><div class="title">${CHILD.short}의 답변</div></div>
+  <div class="scroll pad">
+    <div style="text-align:center;margin-top:16px">${bean(80)}</div>
+    <h1 class="big" style="text-align:center;margin-top:8px;font-size:19px">${s.t}</h1>
+    <div class="date" style="text-align:center;color:var(--sub);font-weight:600;margin-top:6px">${s.d}</div>
+    <div class="section-title" style="margin-bottom:6px">🎙️ 아이가 직접 말했어요</div>
+    <div class="answer-bubble"><div class="who">Q. 주인공에게 뭐라고 말해줄래?</div>"미안해… 다음엔 같이 갖고 놀자."</div>
+    <div class="section-title" style="margin-bottom:6px">❓ 감정 퀴즈</div>
+    <div class="script" style="background:var(--card)"><b>Q. 친구는 어떤 마음이었을까?</b>
+선택지: 기뻐요 / <b>속상해요 ✓</b> / 졸려요
+→ ${CHILD.short}는 친구의 속상한 마음을 정확히 알아차렸어요.</div>
+    <div class="section-title" style="margin-bottom:6px">🧩 행동 퀴즈</div>
+    <div class="script" style="background:var(--card)"><b>Q. 이준이는 어떻게 하면 좋을까?</b>
+선택지: 숨겨요 / <b>돌려줘요 ✓</b> / 모른 척해요
+→ 함께 나누는 선택을 골랐어요.</div>
+    <div style="height:12px"></div>
+    <button class="btn line" onclick="openReportById(${s.id})">이 답변으로 만든 리포트 보기</button>
+    <div style="height:20px"></div>
+  </div>`;
+});
+
+/* ===== REPORT TAB ===== */
+reg('tab-report',()=>{
+  const rows=REPORTS.map(r=>`<div class="repcard" onclick="openReport(${r.id})">
+      <div class="badge">${r.cum?'🌱':'📄'}</div>
+      <div style="flex:1"><div class="rt">${r.t}</div><div class="rd">${r.kind} · ${r.d}</div></div>
+      <div class="c" style="color:var(--sub)">›</div>
+    </div>`).join('');
+  return `<div class="appbar"><button class="iconbtn" onclick="switchTab('home')">‹</button><div class="title">리포트 확인</div></div>
+  <div class="scroll pad" style="padding-top:18px">
+    <button class="btn ghost growbtn" onclick="openReport(3)">🌱 내면 자아 성장 기록 만들기</button>
+    <div class="tip" style="margin-top:10px">부모가 원하는 시점에 그동안의 답변을 모아 누적 리포트를 생성할 수 있어요.</div>
+    <div class="section-title">동화별 리포트</div>
+    ${rows}
+    <div style="height:10px"></div>
+  </div>
+  ${tabbar('report')}`;
+});
+let curRep=null;
+function openReport(id){curRep=REPORTS.find(r=>r.id===id);go('report');}
+function openReportById(sid){const r=REPORTS.find(x=>x.t===STORIES.find(s=>s.id===sid).t);curRep=r||REPORTS[0];go('report');}
+reg('report',()=>{
+  const r=curRep;
+  if(r.cum) return cumReport();
+  return `<div class="appbar"><button class="iconbtn" onclick="back()">‹</button><div class="title">리포트 보기</div></div>
+  <div class="scroll pad">
+    <div class="repsec" style="margin-top:18px"><div class="h plain">${r.t} ${CHILD.short}의 답변 <span class="muted" style="font-weight:600;font-size:12.5px">${r.d}</span></div>
+      <div class="body">${CHILD.short}는 친구의 감정을 <b>'속상해요'</b>로 정확히 읽어냈고, 행동 퀴즈에서 <b>'돌려줘요'</b>를 선택했어요. 음성 답변에서는 <b>"미안해, 다음엔 같이 갖고 놀자"</b>라고 스스로 사과와 대안을 함께 표현했습니다.</div></div>
+    <div class="repsec"><div class="h plain">성장 지표</div>
+      <div class="hexwrap">${hexChart({인내심:.55,배려심:.85,협동심:.7,공감능력:.9,자기조절력:.5,표현력:.45})}</div>
+      <div class="body">친구의 마음을 이해하고 함께 해결하려는 답변이 이번 주 답변에서 배려심과 협동심 높게 나타났으나, 자신의 감정과 생각을 표현하는 답변은 다소 적었습니다.</div></div>
+    <div class="repsec"><div class="h plain">대화할 주제 추천</div>
+      <div class="body">속상하거나 화가 났을 때 ${CHILD.short}는 보통 어떻게 표현하는 편인가요?
+      <div class="quote">"소방차를 친구한테 바로 주기 아쉬웠어? 그 마음도 아주 자연스러운 거야. 그럴 땐 '조금만 더 놀고 빌려줄게'라고 말해도 괜찮아."</div>
+      <div class="quote">"오늘 ${CHILD.short}가 '같이 놀자'고 먼저 말해준 거, 엄마는 정말 멋지다고 생각했어."</div></div></div>
+    <div style="height:16px"></div>
+    <button class="btn" onclick="switchTab('report')">확인 완료</button>
+    <div style="height:20px"></div>
+  </div>
+  ${tabbar('report')}`;
+});
+function cumReport(){
+  return `<div class="appbar"><button class="iconbtn" onclick="back()">‹</button><div class="title">리포트 보기</div></div>
+  <div class="scroll pad">
+    <div class="repsec" style="margin-top:18px"><div class="h plain">이번 달 ${CHILD.short}의 답변 <span class="muted" style="font-weight:600;font-size:12.5px">(07/01-07/16)</span></div>
+      <div class="body">이번 달 ${CHILD.short}는 <b>'나의 감정'</b>보다 <b>'친구의 감정'</b>을 먼저 떠올리는 답변이 눈에 띄게 늘었어요. 초반에는 '내 거야'라는 소유 표현이 많았지만, 최근 동화에서는 '같이', '나눠서'라는 단어를 스스로 사용했습니다.</div></div>
+    <div class="repsec"><div class="h plain">성장 지표</div>
+      <div class="hexwrap">${hexChart({인내심:.6,배려심:.8,협동심:.75,공감능력:.85,자기조절력:.55,표현력:.5})}</div>
+      <div class="body">공감능력과 배려심이 지난달보다 고르게 높아졌고, 갈등 상황을 회피하지 않고 스스로 대안을 제시하는 협동심도 함께 자라고 있습니다.</div></div>
+    <div class="repsec"><div class="h plain">대화할 주제 추천</div>
+      <div class="body">규칙과 약속 지키기, 순서 기다리기를 주제로 한 동화를 추천드려요.
+      <div class="quote">"기다리는 동안 마음이 어땠어? 조금 답답했을 수도 있을 것 같아."</div></div></div>
+    <div style="height:16px"></div>
+    <button class="btn" onclick="switchTab('report')">확인 완료</button>
+    <div style="height:20px"></div>
+  </div>
+  ${tabbar('report')}`;
+}
+
+/* start */
+go('splash');
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "appId": "com.harukong.parent",
+  "appName": "하루콩",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  }
+}

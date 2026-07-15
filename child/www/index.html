@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>하루콩 키즈</title>
+<style>
+@font-face{
+  font-family:'Pretendard Variable';
+  font-weight:45 920;
+  font-style:normal;
+  font-display:swap;
+  src:url('assets/fonts/PretendardVariable.woff2') format('woff2-variations');
+}
+:root{
+  --green:#8DBE4E; --green-d:#749E3B; --green-deep:#3F6B2E; --green-light:#A9D97C;
+  --sun:#FBD34A; --ink:#3A3A2E;
+  --dw:1038px; --dh:782px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Pretendard Variable',-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  color:var(--ink);overflow:hidden;-webkit-user-select:none;user-select:none;
+  background:#12210f;
+}
+/* fixed-size design stage, uniformly scaled to fit the device (no reflow / no distortion) */
+#stage-outer{position:fixed;inset:0;overflow:hidden;background:#12210f}
+#app{position:absolute;left:50%;top:50%;width:var(--dw);height:var(--dh);overflow:hidden;box-shadow:0 0 60px rgba(0,0,0,.5);transform-origin:center center}
+.screen{position:absolute;inset:0;overflow:hidden;opacity:0;visibility:hidden}
+.screen.active{opacity:1;visibility:visible}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---- topbar icons (home/menu) shared by home & video & quiz ---- */
+.icobtn{position:absolute;left:24px;width:46px;height:46px;border-radius:14px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;color:var(--green-deep);font-size:22px;border:none;cursor:pointer;z-index:5}
+.icobtn.home{top:20px}
+.icobtn.menu{top:74px}
+.icobtn svg{width:22px;height:22px}
+
+/* ---- home screen ---- */
+.hometabs{position:absolute;top:26px;left:0;right:0;display:flex;justify-content:center;gap:10px;z-index:4}
+.htab{border-radius:22px;padding:10px 22px;font-size:15px;font-weight:800;cursor:pointer;border:2px solid var(--sun);background:rgba(255,255,255,.92);color:#c99a1e}
+.htab.on{background:var(--sun);color:#6b5210}
+.cardrow{position:absolute;top:112px;left:0;right:0;height:250px;display:flex;justify-content:center;align-items:flex-start;gap:18px;overflow:visible}
+.hcard{width:230px;flex:none;cursor:pointer}
+.hcard .fr{width:100%;height:144px;border-radius:18px;overflow:hidden;border:4px solid #7EC0E8;box-shadow:0 6px 16px rgba(40,60,20,.18);background:#eee}
+.hcard:nth-child(2) .fr{border-color:#F0806B}
+.hcard:nth-child(3) .fr{border-color:#FBD34A}
+.hcard .fr img,.hcard .fr svg{width:100%;height:100%;object-fit:cover;display:block}
+.hcard .t{margin-top:10px;font-weight:800;font-size:15px;color:var(--green-deep);text-align:center;line-height:1.3}
+.hcard .d{margin-top:2px;font-size:12px;color:#6f8a52;text-align:center;font-weight:700}
+.todaybtn{position:absolute;top:378px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.95);border:none;border-radius:24px;padding:13px 30px;font-size:15px;font-weight:800;color:var(--green-deep);box-shadow:0 6px 14px rgba(0,0,0,.15);cursor:pointer;z-index:4}
+.lakebeans{position:absolute;top:560px;left:50%;transform:translateX(-50%);display:flex;align-items:flex-end;gap:14px;z-index:3}
+.lakebeans img:first-child{height:64px}
+.lakebeans img:last-child{height:46px}
+
+/* ---- splash ---- */
+.splash-mid{position:absolute;left:0;right:0;top:250px;display:flex;flex-direction:column;align-items:center;gap:16px;z-index:2}
+.splash-mid img.logo{width:290px}
+.splash-mid .sub{font-size:16px;font-weight:700;color:var(--green-deep);background:rgba(255,255,255,.88);padding:9px 20px;border-radius:20px}
+.splash-mid .cta{margin-top:6px;border:none;border-radius:26px;background:var(--sun);color:#6b5210;font-weight:800;font-size:17px;padding:15px 60px;box-shadow:0 6px 0 #DDAA1E;cursor:pointer}
+.splash-mid .cta:active{transform:translateY(4px);box-shadow:0 2px 0 #DDAA1E}
+
+/* ---- video / quiz frame ---- */
+.vtitle{position:absolute;top:70px;left:110px;background:rgba(255,255,255,.94);padding:10px 22px;border-radius:22px;font-weight:900;color:var(--green-deep);font-size:16px;white-space:nowrap;box-shadow:0 4px 10px rgba(0,0,0,.1);z-index:5}
+.duobean{position:absolute;top:18px;right:26px;display:flex;align-items:flex-end;gap:6px;z-index:5}
+.duobean img{height:46px}
+.frame{position:absolute;top:150px;left:50%;transform:translateX(-50%);width:800px;height:440px;border-radius:22px;background:#fff;padding:8px;box-shadow:0 10px 26px rgba(40,60,20,.22);z-index:2}
+.frame .inner{position:relative;width:100%;height:100%;border-radius:16px;overflow:hidden;background:#eee}
+.frame .inner .scenemedia{width:100%;height:100%}
+.frame .inner .scenemedia img,.frame .inner .scenemedia svg{width:100%;height:100%;object-fit:cover;display:block}
+.frame .inner.dim::after{content:"";position:absolute;inset:0;background:rgba(20,30,10,.28)}
+.playctrl{position:absolute;top:606px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:20px;z-index:5}
+.playctrl button{border:none;background:rgba(255,255,255,.94);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green-deep);box-shadow:0 5px 12px rgba(0,0,0,.14);cursor:pointer}
+.playctrl .sm{width:46px;height:46px;font-size:17px}
+.playctrl .lg{width:60px;height:60px;font-size:24px}
+
+/* speech bubble inside frame (quiz) */
+.fbubble{position:absolute;top:26px;right:26px;max-width:330px;background:#fff;border-radius:18px;padding:14px 18px;font-size:15px;font-weight:800;color:var(--ink);line-height:1.5;box-shadow:0 6px 16px rgba(0,0,0,.18);z-index:3}
+.fbean{position:absolute;left:14px;bottom:14px;width:64px;z-index:3;filter:drop-shadow(0 4px 8px rgba(0,0,0,.2))}
+
+/* ---- quiz answer grids (2x2 pill buttons under frame) ---- */
+.qgrid{position:absolute;top:606px;left:50%;transform:translateX(-50%);width:800px;display:grid;grid-template-columns:1fr 1fr;gap:12px;z-index:5}
+.qbtn{border:none;border-radius:20px;padding:16px 14px;font-size:15px;font-weight:800;color:#fff;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.14);line-height:1.35;min-height:58px;display:flex;align-items:center;justify-content:center;text-align:center;transition:transform .06s}
+.qbtn:active{transform:translateY(3px)}
+.qbtn.a1{background:var(--green-light)}
+.qbtn.a2{background:var(--green-d)}
+.qbtn.a3{background:var(--green-light)}
+.qbtn.talk{background:var(--green-deep)}
+.qbtn.ok{outline:4px solid var(--sun)}
+.qbtn.off{opacity:.35}
+
+/* ---- stage (speak) ---- */
+.stagebubble{position:absolute;top:96px;left:50%;transform:translateX(-50%);max-width:520px;background:#fff;border-radius:20px;padding:16px 24px;font-size:16px;font-weight:800;color:var(--ink);line-height:1.55;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.16);z-index:3}
+.stagebubble.small{padding:12px 22px;font-size:15px}
+.beanchar{position:absolute;left:21%;bottom:26%;height:150px;z-index:2}
+.boychar{position:absolute;right:24%;bottom:24%;height:190px;z-index:2}
+.taphint{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.94);border:none;border-radius:22px;padding:12px 26px;font-size:15px;font-weight:800;color:var(--green-deep);box-shadow:0 5px 12px rgba(0,0,0,.14);cursor:pointer;z-index:5}
+.taphint.rec{background:var(--green);color:#fff}
+
+/* ---- react screen final button ---- */
+.reactbtn{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);border:none;border-radius:24px;background:var(--green);color:#fff;font-weight:800;font-size:16px;padding:16px 42px;box-shadow:0 6px 0 var(--green-d);cursor:pointer;z-index:5}
+.reactbtn:active{transform:translate(-50%,4px);box-shadow:0 2px 0 var(--green-d)}
+</style>
+</head>
+<body>
+<div id="stage-outer"><div id="app"></div></div>
+<script>
+/* ---- fit fixed-size stage uniformly to viewport (no reflow, no distortion) ---- */
+function fitStage(){
+  const dw=1038, dh=782;
+  const s=Math.min(window.innerWidth/dw, window.innerHeight/dh);
+  document.getElementById('app').style.transform='translate(-50%,-50%) scale('+s+')';
+}
+window.addEventListener('resize',fitStage);
+window.addEventListener('orientationchange',()=>setTimeout(fitStage,80));
+
+/* mascot (fallback svg, used only where no dedicated art asset exists) */
+const bean=(s=90)=>`<svg width="${s}" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M60 26C40 26 30 42 30 66c0 30 14 52 30 52s30-22 30-52C90 42 80 26 60 26z" fill="#A7CC63"/>
+<path d="M60 26C48 26 40 40 40 66c0 28 10 50 20 50V26z" fill="#B7D775"/>
+<path d="M60 30c-2-10 2-20 12-24 2 8-2 18-12 24z" fill="#7BAe3f"/>
+<ellipse cx="60" cy="70" rx="26" ry="30" fill="#F4F6E9"/>
+<circle cx="50" cy="66" r="3.6" fill="#43502c"/><circle cx="70" cy="66" r="3.6" fill="#43502c"/>
+<circle cx="45" cy="76" r="5" fill="#F3B7A9" opacity=".75"/><circle cx="75" cy="76" r="5" fill="#F3B7A9" opacity=".75"/>
+<path d="M52 76c4 5 12 5 16 0" stroke="#43502c" stroke-width="2.8" stroke-linecap="round" fill="none"/></svg>`;
+const boySvg=(s=120)=>`<svg width="${s}" viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
+<rect x="34" y="86" width="32" height="46" rx="14" fill="#6BB0DE"/>
+<rect x="38" y="120" width="10" height="22" rx="5" fill="#3f5d78"/><rect x="52" y="120" width="10" height="22" rx="5" fill="#3f5d78"/>
+<circle cx="50" cy="54" r="30" fill="#F6D3B0"/>
+<path d="M22 50c0-20 14-32 28-32s28 12 28 32c-6-6-16-10-28-10S28 44 22 50z" fill="#5A3B26"/>
+<circle cx="40" cy="54" r="3.4" fill="#3a2a1a"/><circle cx="60" cy="54" r="3.4" fill="#3a2a1a"/>
+<path d="M43 64c4 4 10 4 14 0" stroke="#3a2a1a" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>`;
+
+/* scene illustration: story 1 uses the real design artwork, others fall back to a matching svg */
+function scene(seed){
+  if(seed===1){ return `<img src="assets/scene1-room.jpg" alt="">`; }
+  const palettes=[['#BFE6F5','#CFEFC0','#F7E39A'],['#F9DCC4','#FBEFC8','#CDE9C0'],['#DCD6F7','#EAD9F2','#F7D9E3']];
+  const c=palettes[seed%palettes.length];
+  return `<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block">
+    <rect width="160" height="100" fill="${c[0]}"/>
+    <circle cx="130" cy="22" r="14" fill="${c[2]}"/>
+    <ellipse cx="40" cy="24" rx="20" ry="9" fill="#fff" opacity=".85"/><ellipse cx="58" cy="20" rx="14" ry="8" fill="#fff" opacity=".85"/>
+    <path d="M0 70c24-16 44-16 64 0 22-16 44-16 66 0 14-8 24-8 30-3V100H0z" fill="${c[1]}"/>
+    <path d="M0 84c30-12 54-12 84 0 26-10 50-10 76 0V100H0z" fill="#A9D06B"/>
+    <g transform="translate(92 44) scale(.82)">${bean(46)}</g>
+    <g transform="translate(34 40) scale(.6)">${boySvg(60)}</g>
+  </svg>`;
+}
+
+const NAME='이준';
+const STORIES=[
+  {id:1,t:'장난감은 나만 갖고싶어요',dur:'10분',seed:1,seen:true},
+  {id:2,t:'친구와 싸웠어요',dur:'15분',seed:2,seen:true},
+  {id:3,t:'엄마는 나만 혼내요',dur:'10분',seed:0,seen:false},
+];
+
+const app=document.getElementById('app');
+let stack=[];const screens={};const binds={};
+function reg(id,h){screens[id]=h}
+function go(id,o={}){if(o.replace&&stack.length)stack.pop();if(!o.noPush)stack.push(id);render(id)}
+function home(){stack=['home'];render('home')}
+function back(){if(stack.length>1){stack.pop();render(stack[stack.length-1])}}
+function render(id){
+  app.innerHTML='';const el=document.createElement('div');
+  el.className='screen active';
+  el.innerHTML=typeof screens[id]==='function'?screens[id]():screens[id];
+  app.appendChild(el);
+  if(binds[id])binds[id](el);
+}
+const homeIcons=`<button class="icobtn home" onclick="home()"><svg viewBox="0 0 24 24" fill="none"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
+<button class="icobtn menu" onclick="home()"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>`;
+
+/* ===== SPLASH ===== */
+reg('splash',()=>`
+  <img class="bg" src="assets/bg-pond.jpg" alt="">
+  <div class="splash-mid">
+    <img class="logo" src="assets/logo.png" alt="하루콩">
+    <div class="sub">오늘의 나의 영상을 확인해보세요</div>
+    <button class="cta" onclick="home()">시작하기</button>
+  </div>`);
+
+/* ===== HOME ===== */
+let kidFilter='seen';
+function setKidFilter(f){kidFilter=f;render('home');}
+reg('home',()=>{
+  const list=STORIES.filter(s=>kidFilter==='seen'?s.seen:!s.seen);
+  const cards=list.map(s=>`<div class="hcard" onclick="watch(${s.id})">
+    <div class="fr">${scene(s.seed)}</div>
+    <div class="t">${s.t}</div><div class="d">${s.dur}</div></div>`).join('')
+    ||`<div style="margin-top:40px;text-align:center;width:100%;color:#557;font-weight:700">아직 없어요</div>`;
+  return `
+  <img class="bg" src="assets/bg-hill.jpg" alt="">
+  ${homeIcons}
+  <div class="hometabs">
+    <div class="htab ${kidFilter==='seen'?'on':''}" onclick="setKidFilter('seen')">또 볼래요</div>
+    <div class="htab ${kidFilter==='unseen'?'on':''}" onclick="setKidFilter('unseen')">아직 안봤어요</div>
+  </div>
+  <div class="cardrow">${cards}</div>
+  <button class="todaybtn" onclick="watch(1)">오늘의 동화</button>
+  <div class="lakebeans"><img src="assets/bean.png" alt=""><img src="assets/bean-book.png" alt=""></div>`;
+});
+
+/* ===== FLOW state ===== */
+let flow={id:1,step:0};
+const FLOWSCREENS=['play','quizE','quizA','react'];
+function watch(id){flow={id,step:0};go('play');}
+function next(){
+  flow.step++;
+  if(flow.step<FLOWSCREENS.length){go(FLOWSCREENS[flow.step],{replace:true,noPush:true});}
+  else{ const s=story(); if(s) s.seen=true; home(); }
+}
+function story(){return STORIES.find(s=>s.id===flow.id)}
+let talkQ='';
+function talk(q){talkQ=q;go('speak');}
+
+/* ===== 1. PLAY (동화 시청) ===== */
+reg('play',()=>{const s=story();return `
+  <img class="bg" src="assets/bg-hill.jpg" alt="">
+  ${homeIcons}
+  <div class="vtitle">${s.t}</div>
+  <div class="duobean"><img src="assets/bean.png" alt=""><img src="assets/bean-book.png" alt=""></div>
+  <div class="frame"><div class="inner"><div class="scenemedia">${scene(s.seed)}</div></div></div>
+  <div class="playctrl">
+    <button class="sm">⏮</button>
+    <button class="lg" onclick="next()">▶</button>
+    <button class="sm" onclick="next()">⏭</button>
+  </div>`;
+});
+
+/* ===== 2. 감정 퀴즈 (3지선다 + 내가 얘기해볼래요) ===== */
+reg('quizE',()=>{const s=story();return `
+  <img class="bg" src="assets/bg-hill.jpg" alt="">
+  ${homeIcons}
+  <div class="vtitle">${s.t}</div>
+  <div class="duobean"><img src="assets/bean.png" alt=""><img src="assets/bean-book.png" alt=""></div>
+  <div class="frame"><div class="inner dim"><div class="scenemedia">${scene(s.seed)}</div>
+    <img class="fbean" src="assets/bean-book.png" alt="">
+    <div class="fbubble">친구는 어떤 마음이었을까? 🤔</div>
+  </div></div>
+  <div class="qgrid">
+    <button class="qbtn a1" onclick="pickE(this,0)">😄 기뻐요</button>
+    <button class="qbtn a2" onclick="pickE(this,1)">😢 속상해요</button>
+    <button class="qbtn a3" onclick="pickE(this,2)">😴 졸려요</button>
+    <button class="qbtn talk" onclick="talk('친구는 어떤 마음이었을까?')">내가 얘기해볼래요 !</button>
+  </div>`;
+});
+function pickE(b,i){document.querySelectorAll('.qgrid .qbtn').forEach(x=>x.classList.add('off'));b.classList.remove('off');if(i===1)b.classList.add('ok');setTimeout(next,900);}
+
+/* ===== 3. 행동 퀴즈 (3지선다 + 내가 얘기해볼래요) ===== */
+reg('quizA',()=>{const s=story();return `
+  <img class="bg" src="assets/bg-hill.jpg" alt="">
+  ${homeIcons}
+  <div class="vtitle">${s.t}</div>
+  <div class="duobean"><img src="assets/bean.png" alt=""><img src="assets/bean-book.png" alt=""></div>
+  <div class="frame"><div class="inner dim"><div class="scenemedia">${scene(s.seed)}</div>
+    <img class="fbean" src="assets/bean-book.png" alt="">
+    <div class="fbubble">아무도 소방차를 갖고 놀지 못하게 되었어요.<br>소방차가 왜 망가졌을까요?</div>
+  </div></div>
+  <div class="qgrid">
+    <button class="qbtn a1" onclick="pickA(this,0)">소방차가 스스로<br>부러졌다.</button>
+    <button class="qbtn a2" onclick="pickA(this,1)">혼자서만 가지고<br>놀려고 욕심을 부렸다.</button>
+    <button class="qbtn a3" onclick="pickA(this,2)">소방차가 진짜<br>불을 끄러 출동했다.</button>
+    <button class="qbtn talk" onclick="talk('소방차가 왜 망가졌을까요?')">내가 얘기해볼래요 !</button>
+  </div>`;
+});
+function pickA(b,i){document.querySelectorAll('.qgrid .qbtn').forEach(x=>x.classList.add('off'));b.classList.remove('off');if(i===1)b.classList.add('ok');setTimeout(next,950);}
+
+/* ===== S-09 음성 답변 (#4-1, #4-2 듣는 중) ===== */
+reg('speak',()=>`
+  <img class="bg" src="assets/bg-stage.jpg" alt="">
+  ${homeIcons}
+  <div class="stagebubble">${talkQ}</div>
+  <img class="beanchar" src="assets/bean-book.png" alt="">
+  <img class="boychar" src="assets/boy-b.png" alt="">
+  <button class="taphint" id="mic" onclick="rec(this)">눌러서 말해볼까요? 🎤</button>`);
+function rec(b){
+  if(b.classList.contains('rec'))return;
+  b.classList.add('rec');b.textContent='듣고 있어요…';
+  setTimeout(()=>{
+    b.textContent='말 잘했어요! 👏';
+    setTimeout(next,900);
+  },1800);
+}
+
+/* ===== 4. 반응 영상 (#4-3, 피드백) ===== */
+reg('react',()=>`
+  <img class="bg" src="assets/bg-stage.jpg" alt="">
+  ${homeIcons}
+  <div class="stagebubble">좋아, ${NAME}아!<br>그럼 다음에는 어떤 일이 있을지 볼까?</div>
+  <img class="beanchar" src="assets/bean-book.png" alt="">
+  <img class="boychar" src="assets/boy-b.png" alt="">
+  <button class="reactbtn" onclick="next()">다음 이야기 보기 →</button>`);
+
+go('splash');
+fitStage();
+</script>
+</body>
+</html>

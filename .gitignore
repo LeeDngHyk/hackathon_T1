@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Local environment and secrets
+.env
+*.env
+local.properties
+.claude/
+.git.backup/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build output and caches
+.gradle/
+build/
+dist/
+out/
+capacitor-cordova-android-plugins/
+
+# Generated pipeline output and user uploads
+output/
+uploads/
+child_story2/child_story2/full_story.mp4
+child_story2/child_story2/manifest.json

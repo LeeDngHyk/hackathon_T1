@@ -1,0 +1,8 @@
+{
+  "appId": "com.harukong.kids",
+  "appName": "하루콩 키즈",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  }
+}

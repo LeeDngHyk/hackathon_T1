@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>동화 재생기</title>
+  <link rel="stylesheet" href="player.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- 시작 화면 -->
+    <section id="start-screen" class="screen active">
+      <h1 id="story-title">동화를 준비하고 있어요…</h1>
+      <p id="story-message"></p>
+      <button id="start-btn" class="big-btn">시작하기</button>
+    </section>
+
+    <!-- 재생 화면 -->
+    <section id="play-screen" class="screen">
+      <div class="video-wrap">
+        <video id="video" playsinline preload="auto"></video>
+      </div>
+    </section>
+
+    <!-- 퀴즈 화면 -->
+    <section id="quiz-screen" class="screen">
+      <h2 id="quiz-question"></h2>
+      <div id="quiz-choices" class="choices"></div>
+      <div class="quiz-actions">
+        <button id="mic-btn" class="mic-btn" aria-label="음성으로 대답하기">🎤 말하기</button>
+        <p id="quiz-status" class="quiz-status"></p>
+      </div>
+    </section>
+
+    <!-- 결말 화면 -->
+    <section id="end-screen" class="screen">
+      <h2>이야기가 끝났어요 🌈</h2>
+      <p id="closing-message"></p>
+      <div class="parent-notes">
+        <h3>부모님께</h3>
+        <p><strong>함께 나눠볼 질문:</strong> <span id="follow-up"></span></p>
+        <p><strong>오프라인 활동 제안:</strong> <span id="practice"></span></p>
+      </div>
+      <button id="replay-btn" class="big-btn">다시 보기</button>
+    </section>
+  </div>
+
+  <script src="player.js"></script>
+</body>
+</html>
